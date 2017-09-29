@@ -1,0 +1,61 @@
+import random
+import sys
+
+import pandas as pd
+
+import random_generator
+from id3 import *
+
+
+# Read the file from the given path
+def read_file(path):
+    table = pd.read_csv(path)
+    table = table.dropna()
+    return table
+
+
+if __name__ == "__main__":
+
+    cmd_line = sys.argv
+
+    # reading and cleaning Data
+    decision_data = pd.DataFrame(read_file(cmd_line[1]))
+    test_data = pd.DataFrame(read_file(cmd_line[2]))
+    validation_data = pd.DataFrame(read_file(cmd_line[3]))
+
+    col_list = decision_data.columns.values
+    entropy = []
+    for x in col_list:
+        entropy.append(find_entropy(decision_data, x))
+
+    entropy.pop(len(entropy) - 1)
+    selected_column_no = entropy.index(min(entropy))
+    selected_column = col_list[selected_column_no]
+
+    tree_dict, tree = no_of_parts(decision_data, selected_column)
+    print_tree(tree_dict)
+
+    print("--------- ID3 Results -------------")
+    print("Total Nodes: " + str(count(tree)))
+    print("Total Leaf nodes :" + str(count_leaves(tree)))
+
+    find_accuracy(decision_data, tree_dict, tree, "Training")
+    find_accuracy(test_data, tree_dict, tree, "Test")
+    find_accuracy(validation_data, tree_dict, tree, "Validation")
+
+    col_list = list(decision_data.columns.values)
+    selected_column_no = random.randrange(0, len(col_list) - 1)
+    selected_column = col_list[selected_column_no]
+    decision_data.drop(selected_column, axis=1)
+
+    tree_dict, tree = random_generator.no_of_parts(decision_data, selected_column)
+    print_tree(tree_dict)
+
+    print("--------- Random Results -------------")
+    print("Total Nodes: " + str(count(tree)))
+    print("Total Leaf nodes :" + str(count_leaves(tree)))
+
+    find_accuracy(decision_data, tree_dict, tree, "Training")
+    print(total_depth(tree,0))
+#    find_accuracy(test_data, tree_dict, tree, "Test")
+ #   find_accuracy(validation_data, tree_dict, tree, "Validation")
